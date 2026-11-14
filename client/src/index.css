@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+html, body, #root { height: 100%; background: #0b0d12; color: #e8eaf0; overscroll-behavior: none; }
+::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-thumb { background: #2a2f3d; border-radius: 6px; }
+.glass { background: rgba(22, 26, 36, .72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+.letter { display: inline-block; opacity: 0; color: transparent; -webkit-text-stroke: 1.5px #7c5cff;
+  animation: letterIn .7s cubic-bezier(.2,.8,.2,1) forwards; }
+.glow { animation: glow 1.2s ease-in-out infinite alternate; }
+@keyframes letterIn { 0% { opacity: 0; transform: translateY(14px); } 50% { opacity: 1; }
+  100% { opacity: 1; transform: none; color: #fff; -webkit-text-stroke: 0 #fff; } }
+@keyframes glow { from { text-shadow: 0 0 10px #7c5cff55; } to { text-shadow: 0 0 28px #22d3eeaa, 0 0 6px #7c5cff; } }
+@keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
+@keyframes pop { from { transform: scale(.85); opacity: 0; } to { transform: none; opacity: 1; } }
+.pop { animation: pop .15s ease-out; }
+@media (prefers-reduced-motion: reduce) { .letter, .glow { animation-duration: .01s; } }
