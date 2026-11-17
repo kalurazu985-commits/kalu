@@ -1,5 +1,5 @@
 import { memo, useMemo, useRef, useState } from 'react';
-import { Check, CheckCheck, Clock, Pause, Play, Reply, SmilePlus } from 'lucide-react';
+import { Ban, Check, CheckCheck, Clock, Pause, Play, Reply, SmilePlus, Trash2 } from 'lucide-react';
 import Avatar from './Avatar';
 
 const EMOJI = ['👍', '❤️', '😂', '🔥', '😮'];
@@ -17,10 +17,18 @@ function Voice({ src, id, dur = 1 }) {
   );
 }
 
-function MessageBubble({ m, mine, me, onReply, onReact, onImage }) {
+function MessageBubble({ m, mine, me, onReply, onReact, onImage, onDelete }) {
   const [open, setOpen] = useState(false); const x0 = useRef(0);
   const time = new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const reactions = Object.entries(m.reactions || {});
+  if (m.deleted) return (
+    <div className={`flex gap-2 px-3 py-0.5 ${mine ? 'flex-row-reverse' : ''}`}>
+      {!mine && <Avatar name={m.name} color={m.color} size={32} />}
+      <div className="max-w-[78%] md:max-w-[60%] rounded-2xl border border-white/10 px-3 py-2 text-sm italic text-zinc-400 flex items-center gap-1.5">
+        <Ban size={14} />{mine ? 'You deleted this message' : 'This message was deleted'}
+      </div>
+    </div>
+  );
   return (
     <div className={`group flex gap-2 px-3 py-0.5 ${mine ? 'flex-row-reverse' : ''}`}
       onTouchStart={(e) => { x0.current = e.touches[0].clientX; }}
@@ -40,6 +48,7 @@ function MessageBubble({ m, mine, me, onReply, onReact, onImage }) {
           <div className={`absolute top-0 ${mine ? 'right-full mr-1' : 'left-full ml-1'} ${open ? 'flex' : 'hidden group-hover:flex'} pop items-center gap-0.5 rounded-full glass border border-white/10 px-1 py-0.5 z-10`}>
             {EMOJI.map((e) => <button key={e} onClick={() => { onReact(m._id, e); setOpen(false); }} className="px-1 hover:scale-125 transition-transform">{e}</button>)}
             <button onClick={() => { onReply(m); setOpen(false); }} aria-label="Reply" className="px-1 text-zinc-300"><Reply size={16} /></button>
+            {mine && m.status !== 'sending' && <button onClick={() => { onDelete(m); setOpen(false); }} aria-label="Delete message" className="px-1 text-rose-400 hover:text-rose-300"><Trash2 size={16} /></button>}
           </div>
         </div>
         {reactions.length > 0 && <div className="flex gap-1 mt-1 flex-wrap">{reactions.map(([e, u]) => (

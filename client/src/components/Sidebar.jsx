@@ -1,12 +1,12 @@
 import { LogOut, Plus } from 'lucide-react';
-import KaluLogo from './KaluLogo';
+import DiamondLogo from './DiamondLogo';
 import Avatar from './Avatar';
 import InstallApp from '../InstallApp';
 
 export default function Sidebar({ me, rooms, active, online, onSelect, onAdd, onLogout }) {
   return (
     <aside className="flex flex-col h-full w-full md:w-80 bg-[#12151c] md:border-r border-white/5">
-      <div className="flex items-center justify-between p-4"><div className="flex items-center gap-2"><KaluLogo size={34} /><span className="text-xl font-extrabold">Kalu</span></div>
+      <div className="flex items-center justify-between p-4"><div className="flex items-center gap-2"><DiamondLogo size={34} /><span className="text-lg font-extrabold tracking-tight">Diamond Messenger</span></div>
         <button onClick={onAdd} aria-label="Create or join a room" className="grid place-items-center w-9 h-9 rounded-xl bg-violet-500 hover:bg-violet-400"><Plus size={20} /></button></div>
       <InstallApp />
       <div className="flex-1 overflow-y-auto px-2 space-y-1">

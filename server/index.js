@@ -76,8 +76,8 @@ fastify.post('/api/rooms/join', { preHandler: guard }, async (req, reply) => {
 fastify.get('/api/rooms/:id/messages', { preHandler: guard }, async (req, reply) => {
   if (!(await Room.exists({ _id: req.params.id, members: req.user.id }))) return reply.code(403).send({ error: 'Not a member' });
   const { before } = req.query;
-  const list = await Message.find({ roomId: req.params.id, ...(before ? { createdAt: { $lt: new Date(before) } } : {}) })
-    .sort({ createdAt: -1 }).limit(40).lean();
+  const list = await Message.find({ roomId: req.params.id, deletedFor: { $ne: req.user.id }, ...(before ? { createdAt: { $lt: new Date(before) } } : {}) })
+    .select('-deletedFor').sort({ createdAt: -1 }).limit(40).lean();
   return list.reverse().map((m) => ({ ...m, roomId: String(m.roomId) }));
 });
 
@@ -92,6 +92,7 @@ io.on('connection', async (s) => {
   const uid = s.user.id;
   online.set(uid, (online.get(uid) || 0) + 1);
   (await Room.find({ members: uid }, '_id').lean()).forEach((r) => s.join(String(r._id)));
+  s.join(`user:${uid}`); // personal channel: keeps "delete for me" in sync across the user's own devices
   s.emit('presence:all', [...online.keys()]);
   io.emit('presence', { userId: uid, online: true });
 
@@ -116,7 +117,7 @@ io.on('connection', async (s) => {
   s.on('message:react', async ({ id, emoji } = {}) => {
     if (typeof emoji !== 'string' || emoji.length > 16) return;
     const msg = await Message.findById(id).catch(() => null);
-    if (!msg || !s.rooms.has(String(msg.roomId))) return;
+    if (!msg || msg.deleted || !s.rooms.has(String(msg.roomId))) return;
     const r = { ...msg.reactions };
     const a = r[emoji] || [];
     r[emoji] = a.includes(uid) ? a.filter((x) => x !== uid) : [...a, uid];
@@ -124,6 +125,32 @@ io.on('connection', async (s) => {
     msg.reactions = r; msg.markModified('reactions');
     await msg.save();
     io.to(String(msg.roomId)).emit('message:reaction', { id, reactions: r });
+  });
+
+  // Delete one of your own messages: scope 'me' hides it only for you, 'everyone' removes it for the whole room.
+  s.on('message:delete', async (d, ack) => {
+    const done = (r) => { if (typeof ack === 'function') ack(r); };
+    try {
+      const { id, scope } = d && typeof d === 'object' ? d : {};
+      if (scope !== 'me' && scope !== 'everyone') return done({ error: 'Invalid delete option' });
+      const msg = await Message.findById(id).select('roomId sender').lean().catch(() => null);
+      if (!msg) return done({ error: 'Message not found' });
+      if (!s.rooms.has(String(msg.roomId))) return done({ error: 'Not a member' });
+      if (msg.sender !== uid) return done({ error: 'You can only delete your own messages' });
+      const roomId = String(msg.roomId);
+      if (scope === 'everyone') {
+        // Keep the document (so the room shows "This message was deleted") but wipe its content.
+        await Message.updateOne({ _id: id, sender: uid }, {
+          $set: { deleted: true, text: '', reactions: {} },
+          $unset: { media: '', duration: '', replyTo: '' }
+        });
+        io.to(roomId).emit('message:deleted', { id: String(id), roomId, scope: 'everyone' });
+      } else {
+        await Message.updateOne({ _id: id, sender: uid }, { $addToSet: { deletedFor: uid } });
+        io.to(`user:${uid}`).emit('message:deleted', { id: String(id), roomId, scope: 'me' });
+      }
+      done({ ok: true });
+    } catch (e) { done({ error: 'Could not delete the message' }); }
   });
 
   s.on('typing', (roomId) => { if (s.rooms.has(String(roomId))) s.to(String(roomId)).emit('typing', { roomId, userId: uid, name: s.user.name }); });

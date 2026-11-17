@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "KALU",
-  "short_name": "KALU",
-  "description": "KALU — real-time social chatting with rooms, voice notes and media.",
+  "name": "DIAMOND MESSENGER",
+  "short_name": "Diamond",
+  "description": "DIAMOND MESSENGER — real-time social chatting with rooms, voice notes and media.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -13,9 +13,9 @@
   "dir": "ltr",
   "categories": ["social", "communication"],
   "icons": [
-    { "src": "/icons/kalu-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/kalu-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/kalu-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/diamond-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/diamond-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/diamond-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
     { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ]
 }

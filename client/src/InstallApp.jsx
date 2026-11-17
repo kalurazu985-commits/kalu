@@ -62,19 +62,19 @@ export default function InstallApp() {
     <>
       <div className="mx-3 mb-2 flex items-center gap-3 rounded-xl border border-white/5 bg-white/5 p-2.5">
         <span className="grid place-items-center w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500/40 to-cyan-400/30 shrink-0"><Download size={18} /></span>
-        <div className="flex-1 min-w-0 text-sm"><div className="font-medium">Install KALU</div><div className="text-xs text-zinc-400 truncate">Add it to your home screen</div></div>
+        <div className="flex-1 min-w-0 text-sm"><div className="font-medium">Install Diamond Messenger</div><div className="text-xs text-zinc-400 truncate">Add it to your home screen</div></div>
         <button onClick={install} className="rounded-xl bg-violet-500 hover:bg-violet-400 px-3 py-1.5 text-sm font-medium">Install App</button>
         <button onClick={dismiss} aria-label="Dismiss install prompt" className="text-zinc-400 hover:text-white"><X size={16} /></button>
       </div>
       {help && (
         <div className="fixed inset-0 z-50 grid place-items-end md:place-items-center bg-black/60 p-4" onClick={() => setHelp(false)}>
           <div className="glass pop w-full max-w-sm rounded-2xl border border-white/10 p-5" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-3"><h2 className="text-lg font-extrabold">Install KALU</h2>
+            <div className="flex items-center justify-between mb-3"><h2 className="text-lg font-extrabold">Install Diamond Messenger</h2>
               <button onClick={() => setHelp(false)} aria-label="Close" className="text-zinc-400 hover:text-white"><X size={18} /></button></div>
             <ol className="space-y-3 text-sm text-zinc-300">
-              <li className="flex gap-2"><span className="font-bold text-violet-400">1.</span><span>Open KALU in <b>Safari</b> and tap the <Share size={15} className="inline -mt-1" /> <b>Share</b> button.</span></li>
+              <li className="flex gap-2"><span className="font-bold text-violet-400">1.</span><span>Open Diamond Messenger in <b>Safari</b> and tap the <Share size={15} className="inline -mt-1" /> <b>Share</b> button.</span></li>
               <li className="flex gap-2"><span className="font-bold text-violet-400">2.</span><span>Scroll down and tap <b>Add to Home Screen</b>.</span></li>
-              <li className="flex gap-2"><span className="font-bold text-violet-400">3.</span><span>Tap <b>Add</b>. KALU will appear on your home screen.</span></li>
+              <li className="flex gap-2"><span className="font-bold text-violet-400">3.</span><span>Tap <b>Add</b>. Diamond Messenger will appear on your home screen.</span></li>
             </ol>
             <button onClick={() => setHelp(false)} className="mt-4 w-full rounded-xl bg-violet-500 hover:bg-violet-400 py-2 text-sm font-medium">Got it</button>
           </div>

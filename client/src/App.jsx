@@ -5,7 +5,7 @@ import Auth from './components/Auth';
 import Sidebar from './components/Sidebar';
 import ChatRoom from './components/ChatRoom';
 import RoomModal from './components/RoomModal';
-import KaluLogo from './components/KaluLogo';
+import DiamondLogo from './components/DiamondLogo';
 
 export default function App() {
   const [intro, setIntro] = useState(true);
@@ -43,7 +43,7 @@ export default function App() {
       </div>
       <main className={`${room ? 'flex' : 'hidden md:flex'} flex-1 min-w-0`}>
         {room ? <ChatRoom key={room._id} room={room} me={me} online={online} onBack={() => setActive(null)} />
-          : <div className="m-auto text-center text-zinc-500"><div className="grid place-items-center mb-3"><KaluLogo size={72} /></div>Pick a room to start chatting</div>}
+          : <div className="m-auto text-center text-zinc-500"><div className="grid place-items-center mb-3"><DiamondLogo size={72} /></div>Pick a room to start chatting</div>}
       </main>
       {modal && <RoomModal token={auth.token} onClose={() => setModal(false)} onDone={(r) => { upsert(r); setActive(r._id); socket.emit('room:join', r._id); }} />}
     </div>

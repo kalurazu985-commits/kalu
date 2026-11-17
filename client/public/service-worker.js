@@ -1,17 +1,17 @@
-/* KALU service worker — caches the static app shell only.
+/* Diamond Messenger service worker — caches the static app shell only.
  * Never touches /api, /socket.io, non-GET requests, authenticated requests
  * or cross-origin requests, so login, chat, uploads and real-time messaging
  * are always served directly by the network. */
-const VERSION = 'v1';
+const VERSION = 'v2'; // bumped so the new diamond icons replace any cached KALU icons
 const SHELL_CACHE = `kalu-shell-${VERSION}`;
 const ASSET_CACHE = `kalu-assets-${VERSION}`;
 const SHELL_URLS = [
   '/',
   '/manifest.webmanifest',
   '/favicon.svg',
-  '/icons/kalu-192.png',
-  '/icons/kalu-512.png',
-  '/icons/kalu-maskable-512.png',
+  '/icons/diamond-192.png',
+  '/icons/diamond-512.png',
+  '/icons/diamond-maskable-512.png',
   '/icons/apple-touch-icon.png'
 ];
 
@@ -69,8 +69,8 @@ self.addEventListener('fetch', (event) => {
           const cached = await caches.match('/', { cacheName: SHELL_CACHE });
           return cached || new Response(
             '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
-            '<title>KALU</title><body style="margin:0;height:100vh;display:grid;place-items:center;background:#0b0d12;color:#e8eaf0;font-family:system-ui,sans-serif;text-align:center">' +
-            '<div><h1>KALU</h1><p>You are offline. Reconnect to keep chatting.</p></div>',
+            '<title>Diamond Messenger</title><body style="margin:0;height:100vh;display:grid;place-items:center;background:#0b0d12;color:#e8eaf0;font-family:system-ui,sans-serif;text-align:center">' +
+            '<div><h1>Diamond Messenger</h1><p>You are offline. Reconnect to keep chatting.</p></div>',
             { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
         })
     );

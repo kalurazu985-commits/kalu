@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Image as ImageIcon, Link2, Send, X } from 'lucide-react';
+import { ArrowLeft, Image as ImageIcon, Link2, Send, Trash2, X } from 'lucide-react';
 import { api, socket } from '../socket';
 import MessageBubble from './MessageBubble';
 import VoiceRecorder from './VoiceRecorder';
@@ -9,6 +9,7 @@ export default function ChatRoom({ room, me, online, onBack }) {
   const id = room._id;
   const [msgs, setMsgs] = useState([]); const [text, setText] = useState(''); const [reply, setReply] = useState(null);
   const [typing, setTyping] = useState({}); const [light, setLight] = useState(null); const [more, setMore] = useState(true); const [copied, setCopied] = useState(false);
+  const [del, setDel] = useState(null); const [delBusy, setDelBusy] = useState(false); const [delErr, setDelErr] = useState('');
   const box = useRef(), end = useRef(), stick = useRef(true), lastT = useRef(0), busy = useRef(false);
 
   useEffect(() => {
@@ -21,8 +22,14 @@ export default function ChatRoom({ room, me, online, onBack }) {
       setTyping((t) => ({ ...t, [d.userId]: Date.now(), [`n${d.userId}`]: d.name }));
       setTimeout(() => setTyping((t) => (Date.now() - (t[d.userId] || 0) > 2400 ? { ...t, [d.userId]: 0 } : t)), 2500);
     };
-    socket.on('message:new', onNew); socket.on('message:reaction', onReact); socket.on('typing', onTyping);
-    return () => { socket.off('message:new', onNew); socket.off('message:reaction', onReact); socket.off('typing', onTyping); };
+    const onDeleted = ({ id: mid, roomId, scope }) => {
+      if (roomId !== id) return;
+      setMsgs((p) => (scope === 'me' ? p.filter((m) => m._id !== mid)
+        : p.map((m) => (m._id === mid ? { _id: m._id, roomId: m.roomId, sender: m.sender, name: m.name, color: m.color, createdAt: m.createdAt, type: m.type, deleted: true, reactions: {} } : m))));
+      setDel((d) => (d && d._id === mid ? null : d));
+    };
+    socket.on('message:new', onNew); socket.on('message:reaction', onReact); socket.on('typing', onTyping); socket.on('message:deleted', onDeleted);
+    return () => { socket.off('message:new', onNew); socket.off('message:reaction', onReact); socket.off('typing', onTyping); socket.off('message:deleted', onDeleted); };
   }, [id]);
 
   useEffect(() => { if (stick.current) end.current?.scrollIntoView(); }, [msgs.length]);
@@ -61,6 +68,16 @@ export default function ChatRoom({ room, me, online, onBack }) {
     img.src = URL.createObjectURL(f); e.target.value = '';
   };
   const startReply = (m) => setReply({ id: m._id, name: m.name, text: m.text || (m.type === 'image' ? 'Photo' : 'Voice note') });
+  const askDelete = (m) => { setDelErr(''); setDel(m); };
+  const doDelete = (scope) => {
+    if (!del || delBusy) return;
+    setDelBusy(true); setDelErr('');
+    socket.emit('message:delete', { id: del._id, scope }, (r) => {
+      setDelBusy(false);
+      if (r?.error) setDelErr(r.error); else if (r?.ok) setDel(null);
+      else setDelErr('Could not delete the message');
+    });
+  };
   const react = (mid, emoji) => socket.emit('message:react', { id: mid, emoji });
   const copyInvite = () => { navigator.clipboard.writeText(`${location.origin}/?join=${room.code}`); setCopied(true); setTimeout(() => setCopied(false), 1500); };
   const typers = Object.keys(typing).filter((k) => !k.startsWith('n') && typing[k] && k !== me.id).map((k) => typing[`n${k}`]);
@@ -75,7 +92,7 @@ export default function ChatRoom({ room, me, online, onBack }) {
       </header>
       <div ref={box} onScroll={onScroll} className="flex-1 overflow-y-auto py-3 space-y-1">
         {msgs.length === 0 && <p className="text-center text-zinc-500 text-sm mt-10">No messages yet. Say hello.</p>}
-        {msgs.map((m) => <MessageBubble key={m._id} m={m} mine={m.sender === me.id} me={me.id} onReply={startReply} onReact={react} onImage={setLight} />)}
+        {msgs.map((m) => <MessageBubble key={m._id} m={m} mine={m.sender === me.id} me={me.id} onReply={startReply} onReact={react} onImage={setLight} onDelete={askDelete} />)}
         <div ref={end} />
       </div>
       <div className="h-5 px-4 text-xs text-cyan-300">{typers.length > 0 && `${typers.join(', ')} ${typers.length > 1 ? 'are' : 'is'} typing...`}</div>
@@ -88,6 +105,21 @@ export default function ChatRoom({ room, me, online, onBack }) {
             : <VoiceRecorder onSend={(media, duration) => send({ type: 'audio', media, duration })} />}
         </form>
       </div>
+      {del && (
+        <div className="fixed inset-0 z-50 grid place-items-end md:place-items-center bg-black/60 p-4" onClick={() => !delBusy && setDel(null)}>
+          <div className="glass pop w-full max-w-sm rounded-2xl border border-white/10 p-5" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Delete message">
+            <div className="flex items-center justify-between mb-1"><h2 className="text-lg font-extrabold">Delete message?</h2>
+              <button onClick={() => setDel(null)} disabled={delBusy} aria-label="Close" className="text-zinc-400 hover:text-white"><X size={18} /></button></div>
+            <p className="text-sm text-zinc-400 mb-4">Choose how you want to delete this message.</p>
+            <div className="space-y-2">
+              <button onClick={() => doDelete('me')} disabled={delBusy} className="w-full rounded-xl bg-white/10 hover:bg-white/15 py-2.5 text-sm font-medium disabled:opacity-60">Delete for me</button>
+              <button onClick={() => doDelete('everyone')} disabled={delBusy} className="w-full flex items-center justify-center gap-2 rounded-xl bg-rose-500 hover:bg-rose-400 py-2.5 text-sm font-medium disabled:opacity-60"><Trash2 size={16} />Delete for everyone</button>
+              <button onClick={() => setDel(null)} disabled={delBusy} className="w-full rounded-xl py-2 text-sm text-zinc-400 hover:text-white">Cancel</button>
+            </div>
+            {delErr && <p className="mt-2 text-sm text-rose-400">{delErr}</p>}
+          </div>
+        </div>
+      )}
       {light && <div className="fixed inset-0 z-50 bg-black/90 grid place-items-center p-4" onClick={() => setLight(null)}><img src={light} alt="Preview" className="max-w-full max-h-full rounded-lg" /></div>}
     </section>
   );

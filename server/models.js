@@ -23,7 +23,10 @@ const msgSchema = new Schema({
   type: { type: String, default: 'text' },
   text: String, media: String, duration: Number,
   replyTo: { id: String, name: String, text: String },
-  reactions: { type: Schema.Types.Mixed, default: {} }
+  reactions: { type: Schema.Types.Mixed, default: {} },
+  // Message deletion (additive; existing documents simply lack these fields).
+  deleted: { type: Boolean, default: false },   // "Delete for everyone"
+  deletedFor: { type: [String], default: [] }   // "Delete for me" (user ids)
 }, { timestamps: true, minimize: false });
 msgSchema.index({ roomId: 1, createdAt: -1 });
 const Message = m.model('Message', msgSchema);
